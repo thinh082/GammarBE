@@ -61,4 +61,10 @@ namespace GammarBE.Models.DTO
         [EmailAddress(ErrorMessage = "Email không đúng định dạng")]
         public string Email { get; set; } = null!;
     }
+
+    public class GoogleLoginReqDTO
+    {
+        [Required(ErrorMessage = "Mã xác thực không được để trống")]
+        public string IdToken { get; set; } = null!;
+    }
 }

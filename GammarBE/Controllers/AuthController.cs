@@ -123,5 +123,21 @@ namespace GammarBE.Controllers
             var result = await _authService.LogoutAsync();
             return Ok(result);
         }
+
+        [HttpPost("google-login")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginReqDTO req)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { code = 400, message = "Dữ liệu không hợp lệ", data = ModelState });
+            }
+
+            var result = await _authService.GoogleLoginAsync(req);
+            int code = (int)(result.GetType().GetProperty("code")?.GetValue(result, null) ?? 400);
+
+            if (code == 200) return Ok(result);
+            if (code == 403) return StatusCode(403, result);
+            return BadRequest(result);
+        }
     }
 }

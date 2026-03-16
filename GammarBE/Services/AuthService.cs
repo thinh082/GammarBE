@@ -7,6 +7,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Google.Apis.Auth;
 
 namespace GammarBE.Services
 {
@@ -18,6 +19,7 @@ namespace GammarBE.Services
         Task<dynamic> VerifyOtpAsync(VerifyOtpReqDTO req);
         Task<dynamic> ResetPasswordAsync(ResetPasswordReqDTO req);
         Task<dynamic> LogoutAsync();
+        Task<dynamic> GoogleLoginAsync(GoogleLoginReqDTO req);
     }
 
     public class AuthService : IAuthService
@@ -371,6 +373,117 @@ namespace GammarBE.Services
                 {
                     code = 500,
                     message = "Đã có lỗi xảy ra khi đăng xuất: " + ex.Message,
+                    data = (object)null!
+                };
+            }
+        }
+
+        public async Task<dynamic> GoogleLoginAsync(GoogleLoginReqDTO req)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Validate the ID token with Google
+                GoogleJsonWebSignature.Payload payload;
+                try
+                {
+                    payload = await GoogleJsonWebSignature.ValidateAsync(req.IdToken);
+                }
+                catch (InvalidJwtException)
+                {
+                    return new
+                    {
+                        code = 400,
+                        message = "Token từ Google không hợp lệ hoặc đã hết hạn",
+                        data = (object)null!
+                    };
+                }
+
+                var email = payload.Email;
+                var fullname = payload.Name;
+
+                if (string.IsNullOrEmpty(email))
+                {
+                    return new
+                    {
+                        code = 400,
+                        message = "Không thể lấy email từ tài khoản Google",
+                        data = (object)null!
+                    };
+                }
+
+                // Check if user exists
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+
+                if (user == null)
+                {
+                    // Random password for Google-only users to prevent standard login
+                    string randomPassword = Guid.NewGuid().ToString("N");
+                    string pubKey = _configuration["pubkey"] ?? "";
+                    var encryptedPassword = CommonServices.Encrypt(randomPassword, pubKey);
+
+                    user = new User
+                    {
+                        Email = email,
+                        Fullname = fullname,
+                        Password = encryptedPassword,
+                        Status = "Active",
+                        Role = "User",
+                        CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
+                    };
+
+                    _context.Users.Add(user);
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    if (user.Status != "Active")
+                    {
+                        return new
+                        {
+                            code = 403,
+                            message = "Tài khoản của bạn đã bị vô hiệu hóa",
+                            data = (object)null!
+                        };
+                    }
+                }
+
+                await transaction.CommitAsync();
+
+                // Build and set the JWT
+                var token = _commonServices.GenerateJwtToken(user);
+
+                bool isHttps = _httpContextAccessor.HttpContext?.Request.IsHttps ?? false;
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = isHttps,
+                    SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax,
+                    Expires = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["Jwt:ExpiryMinutes"] ?? "1440"))
+                };
+                _httpContextAccessor.HttpContext?.Response.Cookies.Append("jwt", token, cookieOptions);
+
+                return new
+                {
+                    code = 200,
+                    message = "Đăng nhập Google thành công",
+                    data = new
+                    {
+                        id = user.Id,
+                        email = user.Email,
+                        fullname = user.Fullname,
+                        role = user.Role,
+                        createdAt = user.CreatedAt
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return new
+                {
+                    code = 500,
+                    message = "Đã có lỗi xảy ra khi đăng nhập bằng Google: " + ex.Message,
                     data = (object)null!
                 };
             }
