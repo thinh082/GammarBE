@@ -157,12 +157,11 @@ namespace GammarBE.Services
                 var token = _commonServices.GenerateJwtToken(user);
 
                 // Set JWT in cookie
-                bool isHttps = _httpContextAccessor.HttpContext?.Request.IsHttps ?? false;
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = isHttps, // Use true only for HTTPS
-                    SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
                     Expires = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["Jwt:ExpiryMinutes"] ?? "1440"))
                 };
                 _httpContextAccessor.HttpContext?.Response.Cookies.Append("jwt", token, cookieOptions);
@@ -453,12 +452,11 @@ namespace GammarBE.Services
                 // Build and set the JWT
                 var token = _commonServices.GenerateJwtToken(user);
 
-                bool isHttps = _httpContextAccessor.HttpContext?.Request.IsHttps ?? false;
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = isHttps,
-                    SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
                     Expires = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["Jwt:ExpiryMinutes"] ?? "1440"))
                 };
                 _httpContextAccessor.HttpContext?.Response.Cookies.Append("jwt", token, cookieOptions);
