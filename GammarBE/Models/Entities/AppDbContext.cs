@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -289,6 +289,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.Fullname)
                 .HasMaxLength(255)
                 .HasColumnName("fullname");
+            entity.Property(e => e.IsAnonymous)
+                .HasDefaultValue(true)
+                .HasColumnName("isAnonymous");
             entity.Property(e => e.Password)
                 .HasMaxLength(1000)
                 .HasColumnName("password");

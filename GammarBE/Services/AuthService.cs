@@ -20,6 +20,7 @@ namespace GammarBE.Services
         Task<dynamic> ResetPasswordAsync(ResetPasswordReqDTO req);
         Task<dynamic> LogoutAsync();
         Task<dynamic> GoogleLoginAsync(GoogleLoginReqDTO req);
+        Task<dynamic> CreateAnonymousAsync();
     }
 
     public class AuthService : IAuthService
@@ -72,10 +73,20 @@ namespace GammarBE.Services
                     Fullname = req.Fullname,
                     Status = "Active", // Default status
                     Role = "User", // Default role
+                    IsAnonymous = false, // Default to non-anonymous
                     CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
                 };
 
                 _context.Users.Add(newUser);
+                // Create wallet
+                var newWallet = new Wallet
+                {
+                    UserId = newUser.Id,
+                    Balance = 0,
+                    Total = 0,
+                    UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
+                };
+                _context.Wallets.Add(newWallet);
                 await _context.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -484,6 +495,74 @@ namespace GammarBE.Services
                 {
                     code = 500,
                     message = "Đã có lỗi xảy ra khi đăng nhập bằng Google: " + ex.Message,
+                    data = (object)null!
+                };
+            }
+        }
+
+        public async Task<dynamic> CreateAnonymousAsync()
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // Tạo email và password ngẫu nhiên cho user ẩn danh
+                string anonymousId = Guid.NewGuid().ToString("N").Substring(0, 8);
+                string email = $"anon_{anonymousId}@gammar.be";
+                string password = Guid.NewGuid().ToString("N");
+
+                // Mã hóa mật khẩu dùng RSA
+                string pubKey = _configuration["pubkey"] ?? "";
+                var encryptedPassword = CommonServices.Encrypt(password, pubKey);
+
+                var newUser = new User
+                {
+                    Email = email,
+                    Password = encryptedPassword,
+                    Fullname = "Anonymous User",
+                    Status = "Active",
+                    Role = "User",
+                    IsAnonymous = true,
+                    CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
+                };
+
+                _context.Users.Add(newUser);
+                await _context.SaveChangesAsync();
+                // set cookies cho user ẩn danh
+                var token = _commonServices.GenerateJwtToken(newUser);
+
+                // Set JWT in cookie
+                bool isHttps = _httpContextAccessor.HttpContext?.Request.IsHttps ?? false;
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = isHttps, // Use true only for HTTPS
+                    SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax,
+                    Expires = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["Jwt:ExpiryMinutes"] ?? "14400"))
+                };
+                _httpContextAccessor.HttpContext?.Response.Cookies.Append("jwt", token, cookieOptions);
+                await transaction.CommitAsync();
+
+                return new
+                {
+                    code = 200,
+                    message = "Tạo tài khoản ẩn danh thành công",
+                    data = new
+                    {
+                        id = newUser.Id,
+                        email = newUser.Email,
+                        fullname = newUser.Fullname,
+                        isAnonymous = newUser.IsAnonymous
+                    }
+                };
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+
+                return new
+                {
+                    code = 500,
+                    message = "Đã có lỗi xảy ra khi tạo tài khoản ẩn danh: " + ex.Message,
                     data = (object)null!
                 };
             }
