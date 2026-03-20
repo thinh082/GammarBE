@@ -139,5 +139,15 @@ namespace GammarBE.Controllers
             if (code == 403) return StatusCode(403, result);
             return BadRequest(result);
         }
+
+        [HttpPost("create-anonymous")]
+        public async Task<IActionResult> CreateAnonymous()
+        {
+            var result = await _authService.CreateAnonymousAsync();
+            int code = (int)(result.GetType().GetProperty("code")?.GetValue(result, null) ?? 400);
+
+            if (code == 200) return Ok(result);
+            return BadRequest(result);
+        }
     }
 }

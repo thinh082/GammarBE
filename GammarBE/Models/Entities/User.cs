@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace GammarBE.Models.Entities;
@@ -20,6 +20,8 @@ public partial class User
     public DateTime? CreatedAt { get; set; }
 
     public string? Code { get; set; }
+
+    public bool? IsAnonymous { get; set; }
 
     public virtual ICollection<Generation> Generations { get; set; } = new List<Generation>();
 
