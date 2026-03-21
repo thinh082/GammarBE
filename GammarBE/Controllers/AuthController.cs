@@ -52,6 +52,7 @@ namespace GammarBE.Controllers
             }
 
             var result = await _authService.LoginAsync(req);
+            var uaua = "213123";
 
             int code = (int)(result.GetType().GetProperty("code")?.GetValue(result, null) ?? 400);
 
