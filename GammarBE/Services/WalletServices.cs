@@ -1,5 +1,8 @@
 using GammarBE.Models.Entities;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using PayOS;
+using PayOS.Models.V2.PaymentRequests;
 using System;
 using System.Threading.Tasks;
 
@@ -8,15 +11,19 @@ namespace GammarBE.Services
     public interface IWalletService
     {
         Task<dynamic> GetBalanceAsync(Guid userId);
+        Task<dynamic> Create();
     }
 
     public class WalletService : IWalletService
     {
         private readonly AppDbContext _context;
 
-        public WalletService(AppDbContext context)
+        private readonly IConfiguration _configuration;
+
+        public WalletService(AppDbContext context  , IConfiguration configuration)
         {
             _context = context;
+            _configuration = configuration;
         }
 
         public async Task<dynamic> GetBalanceAsync(Guid userId)
@@ -54,7 +61,32 @@ namespace GammarBE.Services
                 };
             }
         }
-        //
+
+
+        public async Task<dynamic> Create()
+        {
+            var clientId = _configuration["PayOs:ClientId"];
+            var apiKey = _configuration["PayOs:ApiKey"];
+            var checksumKey = _configuration["PayOs:ChecksumKey"];
+
+            var payOS = new PayOSClient(clientId, apiKey, checksumKey);
+
+            var domain = "https://localhost:7105";
+
+
+            var paymentLinkRequest = new CreatePaymentLinkRequest
+            {
+                OrderCode = int.Parse(DateTimeOffset.Now.ToString("ffffff")),
+                Amount = 2000,
+                Description = "Thanh toan don hang",
+                ReturnUrl = domain,
+                CancelUrl = domain
+            };
+            var response = await payOS.PaymentRequests.CreateAsync(paymentLinkRequest);
+
+
+            return new { response };
+        }
     }
 }
 
