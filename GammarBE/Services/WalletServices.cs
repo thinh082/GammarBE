@@ -71,7 +71,7 @@ namespace GammarBE.Services
 
             var payOS = new PayOSClient(clientId, apiKey, checksumKey);
 
-            var domain = "https://localhost:7105";
+            var domain = "https://audrina-subultimate-ghostily.ngrok-free.dev/api/Wallet/payos-return";
 
 
             var paymentLinkRequest = new CreatePaymentLinkRequest
