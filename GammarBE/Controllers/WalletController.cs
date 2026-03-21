@@ -97,6 +97,7 @@ namespace GammarBE.Controllers
                 <p>Trạng thái mã: {code} - Status: {status}</p>
                 <hr/>
                 <p>Bạn có thể đóng trang này và quay lại ứng dụng.</p>
+                <a href='http://127.0.0.1:5501/index.html' style='padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 20px;'>Quay lại trang chủ</a>
             </body>
         </html>";
 
