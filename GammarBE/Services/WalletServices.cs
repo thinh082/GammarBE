@@ -11,7 +11,7 @@ namespace GammarBE.Services
     public interface IWalletService
     {
         Task<dynamic> GetBalanceAsync(Guid userId);
-        Task<dynamic> Create();
+        Task<dynamic> Create(long Amount);
     }
 
     public class WalletService : IWalletService
@@ -63,7 +63,7 @@ namespace GammarBE.Services
         }
 
 
-        public async Task<dynamic> Create()
+        public async Task<dynamic> Create(long Amount)
         {
             var clientId = _configuration["PayOs:ClientId"];
             var apiKey = _configuration["PayOs:ApiKey"];
@@ -77,7 +77,7 @@ namespace GammarBE.Services
             var paymentLinkRequest = new CreatePaymentLinkRequest
             {
                 OrderCode = int.Parse(DateTimeOffset.Now.ToString("ffffff")),
-                Amount = 2000,
+                Amount = Amount,
                 Description = "Thanh toan don hang",
                 ReturnUrl = domain,
                 CancelUrl = domain

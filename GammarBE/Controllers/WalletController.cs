@@ -51,9 +51,9 @@ namespace GammarBE.Controllers
         }
         [HttpPost("create")]
         [AllowAnonymous]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(long Amount)
         {
-            var result = await _walletService.Create();
+            var result = await _walletService.Create(Amount);
             int code = (int)(result.GetType().GetProperty("code")?.GetValue(result, null) ?? 400);
             if (code == 200) return Ok(result);
             return BadRequest(result);
