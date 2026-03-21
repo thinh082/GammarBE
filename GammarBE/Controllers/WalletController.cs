@@ -36,13 +36,22 @@ namespace GammarBE.Controllers
             }
 
             var result = await _walletService.GetBalanceAsync(userId);
-            
+
             // Xử lý kết quả trả về từ service
             int code = (int)(result.GetType().GetProperty("code")?.GetValue(result, null) ?? 400);
 
             if (code == 200) return Ok(result);
             if (code == 404) return NotFound(result);
-            
+
+            return BadRequest(result);
+        }
+        [HttpPost("create")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Create()
+        {
+            var result = await _walletService.Create();
+            int code = (int)(result.GetType().GetProperty("code")?.GetValue(result, null) ?? 400);
+            if (code == 200) return Ok(result);
             return BadRequest(result);
         }
     }
