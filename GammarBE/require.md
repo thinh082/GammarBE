@@ -3,7 +3,7 @@
 2. Các hàm điều dùng async await
 3. Kiểu trả về dạng dynamic càng tốt
 4. Kiểu trả về nên có key - value là code và message với code là theo quy ước của response code và message tùy vào kết quả trả ra
-5. Dùng LINQ ENTITY với các biến chỉ đọc thì dùng asknotracking() và nhớ dùng await trong các LINQ nhé
+5. Dùng LINQ ENTITY với các biến chỉ đọc thì dùng asknotracking() và nhớ dùng await trong các LINQ,được thì tối ưu các câu lệnh LINQ để tránh việc truy vấn nhiều lần vào database như select để lấy ra , any để kiểm tra 
 6. Dùng try catch để bắt lỗi trong các trường hợp thực thi nhiều tác vụ
 7. Dùng begin transaction và commit transaction trong các trường hợp thực thi nhiều tác vụ
 8. Dùng HTTPGET và Post là chính 

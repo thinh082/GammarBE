@@ -49,10 +49,9 @@ namespace GammarBE.Services
             {
                 // Validate email
                 var existingUser = await _context.Users
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(u => u.Email == req.Email);
+                    .AnyAsync(u => u.Email == req.Email);
 
-                if (existingUser != null)
+                if (existingUser)
                 {
                     return new
                     {
