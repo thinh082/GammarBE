@@ -80,7 +80,7 @@ namespace GammarBE.Services
                 // Create wallet
                 var newWallet = new Wallet
                 {
-                    UserId = newUser.Id,
+                    User = newUser, // Sử dụng navigation property để EF Core tự xử lý ID sau khi SaveChanges
                     Balance = 0,
                     Total = 0,
                     UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
@@ -442,6 +442,15 @@ namespace GammarBE.Services
                     };
 
                     _context.Users.Add(user);
+                    // Create wallet for Google user
+                    var newWallet = new Wallet
+                    {
+                        User = user,
+                        Balance = 0,
+                        Total = 0,
+                        UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
+                    };
+                    _context.Wallets.Add(newWallet);
                     await _context.SaveChangesAsync();
                 }
                 else
@@ -523,6 +532,15 @@ namespace GammarBE.Services
                 };
 
                 _context.Users.Add(newUser);
+                // Create wallet for Anonymous user
+                var newWallet = new Wallet
+                {
+                    User = newUser,
+                    Balance = 0,
+                    Total = 0,
+                    UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Unspecified)
+                };
+                _context.Wallets.Add(newWallet);
                 await _context.SaveChangesAsync();
                 // set cookies cho user ẩn danh
                 var token = _commonServices.GenerateJwtToken(newUser);

@@ -1,4 +1,4 @@
-﻿using GammarBE.Models.Entities;
+using GammarBE.Models.Entities;
 
 namespace GammarBE.Services
 {
@@ -9,10 +9,10 @@ namespace GammarBE.Services
         {
             _context = context;
         }
-        public Task<dynamic> GenerateImg()
-        {
+        //public Task<dynamic> GenerateImg()
+        //{
             
-        }
+        //}
 
     }
 }

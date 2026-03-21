@@ -15,9 +15,9 @@ namespace GammarBE.Controllers
             _configuration = configuration;
             _commonServices = commonServices;   
         }
-        public Task<IActionResult> HashAccesskey() 
-        {
+        //public Task<IActionResult> HashAccesskey() 
+        //{
 
-        }
+        //}
     }
 }
