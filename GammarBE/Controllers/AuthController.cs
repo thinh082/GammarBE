@@ -41,15 +41,7 @@ namespace GammarBE.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginReqDTO req)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new
-                {
-                    code = 400,
-                    message = "Dữ liệu không hợp lệ",
-                    data = ModelState
-                });
-            }
+            
 
             var result = await _authService.LoginAsync(req);
             var uaua = "213123";
