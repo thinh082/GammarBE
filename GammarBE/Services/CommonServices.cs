@@ -1,9 +1,11 @@
 using BCrypt.Net;
 using GammarBE.Models.Entities;
 using GammarBE.Models.Model;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.IdentityModel.Tokens;
+using RabbitMQ.Client;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Mail;
@@ -121,5 +123,58 @@ namespace GammarBE.Services
                 return Encoding.UTF8.GetString(decrypted);
             }
         }
+
+        public async Task<dynamic> SendToQueue(string messageText)
+        {
+
+            try
+            {
+
+                var rabbitUri = _configuration.GetSection("RabbitMQ:Uri").Value;
+
+                if (string.IsNullOrEmpty(rabbitUri))
+
+                {
+
+                    return new {message="Có lỗi với kết nối hệ thống!"};
+
+                }
+                var factory = new ConnectionFactory { Uri = new Uri(rabbitUri) };
+
+                using var connection = await factory.CreateConnectionAsync();
+
+                using var channel = await connection.CreateChannelAsync();
+
+
+
+                // Khai báo hàng đợi tên là "test-queue"
+
+                await channel.QueueDeclareAsync(queue: "test-queue", durable: true, exclusive: false, autoDelete: false, arguments: null);
+
+
+
+                var body = Encoding.UTF8.GetBytes(messageText);
+
+
+
+                // Gửi tin nhắn
+
+                await channel.BasicPublishAsync(exchange: string.Empty, routingKey: "test-queue", body: body);
+
+
+
+                return new { message = "Gửi thông báo thành công!" };
+
+            }
+
+            catch (Exception ex)
+            {
+
+                return new { message = "Có lỗi với kết nối hệ thống!"+ ex.Message }; ;
+
+            }
+
+        }
+
     }
 }

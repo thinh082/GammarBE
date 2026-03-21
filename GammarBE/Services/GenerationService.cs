@@ -11,7 +11,8 @@ namespace GammarBE.Services
         }
         public Task<dynamic> GenerateImg()
         {
-
+            
         }
+
     }
 }
