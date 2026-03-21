@@ -38,7 +38,7 @@ namespace GammarBE.Controllers
             return BadRequest(result);
         }
 
-        [HttpPost("login")]
+        [HttpPost("hahaha")]
         public async Task<IActionResult> Login([FromBody] LoginReqDTO req)
         {
             
@@ -51,7 +51,7 @@ namespace GammarBE.Controllers
             {
                 return Ok(result);
             }
-            else if (code == 404)
+            else if (code == 406)
             {
                 return NotFound(result);
             }
@@ -62,8 +62,13 @@ namespace GammarBE.Controllers
 
             return BadRequest(result);
         }
+        [HttpPost("123")]
+        public async Task<IActionResult> Test()
+        {
+            return Ok();
+        }
 
-        [HttpPost("forgot-password")]
+        [HttpPost("forgot")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordReqDTO req)
         {
             if (!ModelState.IsValid)
@@ -94,7 +99,7 @@ namespace GammarBE.Controllers
             return BadRequest(result);
         }
 
-        [HttpPost("reset-password")]
+        [HttpPost("reset")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordReqDTO req)
         {
             if (!ModelState.IsValid)
@@ -109,7 +114,7 @@ namespace GammarBE.Controllers
             return BadRequest(result);
         }
 
-        [HttpPost("logout")]
+        [HttpPost("ok")]
         public async Task<IActionResult> Logout()
         {
             var result = await _authService.LogoutAsync();
