@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using Google.Apis.Auth;
+using System.Data;
 
 namespace GammarBE.Services
 {
@@ -59,8 +60,7 @@ namespace GammarBE.Services
                         message = "Email này đã được sử dụng",
                         data = (object)null!
                     };
-                }
-
+                }                
                 // Encrypt password using RSA
                 string pubKey = _configuration["pubkey"] ?? "";
                 var encryptedPassword = CommonServices.Encrypt(req.Password, pubKey);
