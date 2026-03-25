@@ -12,7 +12,7 @@ using System.Data;
 
 namespace GammarBE.Services
 {
-    public interface IAuthService
+    public interface IAuthService//
     {
         Task<dynamic> RegisterAsync(RegisterReqDTO req);
         Task<dynamic> LoginAsync(LoginReqDTO req);
