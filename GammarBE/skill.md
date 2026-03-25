@@ -60,6 +60,7 @@ public class <FeatureName>Services : I<FeatureName>Services
 
 **Checklist khi viết Service:**
 - [ ] Tất cả method dùng `async/await`
+- [ ] Ưu tiên trả về `dynamic` để dễ map với JSON cho client (trường hợp cần thiết mới dùng kiểu khác)
 - [ ] Query đọc dữ liệu có `.AsNoTracking()`
 - [ ] Kiểm tra tồn tại dùng `.AnyAsync()`, không dùng `.Count()` hay `.FirstOrDefault()`
 - [ ] `Select()` chỉ lấy đúng fields cần thiết
@@ -140,6 +141,27 @@ catch (Exception ex)
 {
     await transaction.RollbackAsync();
     return new { code = 500, message = "Đã xảy ra lỗi: " + ex.Message };
+}
+```
+
+> [!NOTE]
+> Khi sử dụng `BeginTransactionAsync`, hãy cân nhắc cấu hình `IsolationLevel` (ví dụ: `IsolationLevel.Serializable`) nếu trong transaction có các tác vụ đọc dữ liệu quan trọng hoặc các nghiệp vụ cộng/trừ số dư, tồn kho... để tránh các vấn đề như **Dirty Read**, **Race Condition** và đảm bảo tính nhất quán tuyệt đối.
+
+### Validate DTO đầu vào
+> Nếu xử lý validate DTO đầu vào quá nhiều trường thì nên viết hàm riêng và hàm đó nằm trong class DTO luôn.
+```csharp
+public class CreateRequest 
+{
+    public string Name { get; set; }
+    // ...nhiều trường khác
+
+    public string Validate()
+    {
+        if (string.IsNullOrEmpty(Name)) 
+            return "Tên không được để trống";
+        // ...các validation khác
+        return null; // Hợp lệ
+    }
 }
 ```
 
