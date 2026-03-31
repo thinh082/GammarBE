@@ -1,16 +1,18 @@
 using GammarBE.Models.DTO;
 using GammarBE.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace GammarBE.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class GenerationController : ControllerBase
     {
-        private readonly GenerationService _generationService;
+        private readonly IGenerationService _generationService;
 
-        public GenerationController(GenerationService generationService)
+        public GenerationController(IGenerationService generationService)
         {
             _generationService = generationService;
         }
