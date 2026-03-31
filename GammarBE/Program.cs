@@ -24,7 +24,7 @@ builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<CommonServices>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
-builder.Services.AddScoped<GenerationService>();
+builder.Services.AddScoped<IGenerationService, GenerationService>();
 
 
 // JWT Authentication Configuration
