@@ -27,48 +27,52 @@ namespace GammarBE.Services
 
         public async Task<dynamic> GenerateImg(GenerateImgDTO dto)
         {
-            var accessToken = _configuration["Vmeadi:access_token"]
-                ?? throw new InvalidOperationException("Vmeadi:access_token chưa được cấu hình trong appsettings.");
-
-            var formData = new List<KeyValuePair<string, string>>
-            {
-                new("access_token", accessToken),
-                new("domain", "vmedia.ai"),
-                new("action_type", "create"),
-                new("model", dto.Model_ID),
-                new("prompt", dto.Prompt),
-                new("ratio", dto.Ratio),
-                new("project_id", "default"),
-            };
-
-            _logger.LogInformation("=== [GenerateImg] Gửi request tới Gommo API ===");
-            _logger.LogInformation("URL: {Url}", GommoApiUrl);
-            _logger.LogInformation("Params: model={Model}, prompt={Prompt}, ratio={Ratio}",
-                dto.Model_ID, dto.Prompt, dto.Ratio);
-
-            var client = _httpClientFactory.CreateClient();
-            var response = await client.PostAsync(GommoApiUrl, new FormUrlEncodedContent(formData));
-
-            var rawBody = await response.Content.ReadAsStringAsync();
-
-            _logger.LogInformation("=== [GenerateImg] Response từ Gommo API ===");
-            _logger.LogInformation("HTTP Status: {StatusCode}", (int)response.StatusCode);
-            _logger.LogInformation("Raw Body: {Body}", rawBody);
-
-            if (string.IsNullOrWhiteSpace(rawBody))
-                throw new Exception($"Gommo API trả về body rỗng. HTTP Status: {(int)response.StatusCode}");
-
             try
             {
+                var accessToken = _configuration["Vmeadi:access_token"];
+                if (string.IsNullOrWhiteSpace(accessToken))
+                {
+                    return new { code = 500, message = "Vmeadi:access_token chưa được cấu hình trong appsettings." };
+                }
+
+                var formData = new List<KeyValuePair<string, string>>
+                {
+                    new("access_token", accessToken),
+                    new("domain", "vmedia.ai"),
+                    new("action_type", "create"),
+                    new("model", dto.Model_ID),
+                    new("prompt", dto.Prompt),
+                    new("ratio", dto.Ratio),
+                    new("project_id", "default"),
+                };
+
+                _logger.LogInformation("=== [GenerateImg] Gửi request tới Gommo API ===");
+                _logger.LogInformation("URL: {Url}", GommoApiUrl);
+                _logger.LogInformation("Params: model={Model}, prompt={Prompt}, ratio={Ratio}",
+                    dto.Model_ID, dto.Prompt, dto.Ratio);
+
+                var client = _httpClientFactory.CreateClient();
+                var response = await client.PostAsync(GommoApiUrl, new FormUrlEncodedContent(formData));
+
+                var rawBody = await response.Content.ReadAsStringAsync();
+
+                _logger.LogInformation("=== [GenerateImg] Response từ Gommo API ===");
+                _logger.LogInformation("HTTP Status: {StatusCode}", (int)response.StatusCode);
+                _logger.LogInformation("Raw Body: {Body}", rawBody);
+
+                if (string.IsNullOrWhiteSpace(rawBody))
+                {
+                    return new { code = 500, message = $"Gommo API trả về body rỗng. HTTP Status: {(int)response.StatusCode}" };
+                }
+
                 var result = JsonSerializer.Deserialize<dynamic>(rawBody);
-                return result!;
+                return new { code = 200, message = "Thành công", data = result };
             }
-            catch (JsonException ex)
+            catch (Exception ex)
             {
-                _logger.LogError("Không parse được JSON. Raw: {Body}", rawBody);
-                throw new Exception($"Gommo API trả về response không hợp lệ. HTTP {(int)response.StatusCode}. Raw: {rawBody}", ex);
+                _logger.LogError(ex, "Đã xảy ra lỗi trong GenerateImg");
+                return new { code = 500, message = "Đã xảy ra lỗi: " + ex.Message };
             }
-            //
         }
     }
 }
