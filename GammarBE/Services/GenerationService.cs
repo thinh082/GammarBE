@@ -1,15 +1,24 @@
 using GammarBE.Models.DTO;
 using GammarBE.Models.Entities;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace GammarBE.Services
 {
-    public class GenerationService
+    public interface IGenerationService
+    {
+        Task<dynamic> GenerateImg(GenerateImgDTO dto);
+    }
+
+    public class GenerationService : IGenerationService
     {
         private readonly AppDbContext _context;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
         private readonly ILogger<GenerationService> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         private const string GommoApiUrl = "https://api.gommo.net/ai/generateImage";
 
@@ -17,12 +26,14 @@ namespace GammarBE.Services
             AppDbContext context,
             IHttpClientFactory httpClientFactory,
             IConfiguration configuration,
-            ILogger<GenerationService> logger)
+            ILogger<GenerationService> logger,
+            IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
             _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<dynamic> GenerateImg(GenerateImgDTO dto)
@@ -65,14 +76,17 @@ namespace GammarBE.Services
                     return new { code = 500, message = $"Gommo API trả về body rỗng. HTTP Status: {(int)response.StatusCode}" };
                 }
 
+            try
+            {
                 var result = JsonSerializer.Deserialize<dynamic>(rawBody);
-                return new { code = 200, message = "Thành công", data = result };
+                return result!;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Đã xảy ra lỗi trong GenerateImg");
                 return new { code = 500, message = "Đã xảy ra lỗi: " + ex.Message };
             }
+            //
         }
     }
 }
