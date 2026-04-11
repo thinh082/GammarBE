@@ -1,23 +1,32 @@
 ﻿using GammarBE.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 
 namespace GammarBE.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class CommonController : ControllerBase
-    {
-        private readonly IConfiguration _configuration;
-        private readonly CommonServices _commonServices;
-        public CommonController(IConfiguration configuration,CommonServices commonServices)
+    {     
+        [HttpGet("GetKey")]
+        public Task<IActionResult> GetKey()
         {
-            _configuration = configuration;
-            _commonServices = commonServices;   
-        }
-        //public Task<IActionResult> HashAccesskey() 
-        //{
+            const int keySize = 2048;
+            string privateKey;
+            string publicKey;
+            
+            using (var rsa = RSA.Create(keySize))
+            {
+                // Xuất Private Key (Bao gồm cả thông số công khai)
+                privateKey = Convert.ToBase64String(rsa.ExportRSAPrivateKey());
 
-        //}
+                // Xuất Public Key
+                publicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey());
+            }
+            
+            return Task.FromResult<IActionResult>(Ok(new { publicKey, privateKey }));
+        }
     }
 }

@@ -139,12 +139,21 @@ namespace GammarBE.Services
                     };
                 }
 
-                // Decrypt stored password and compare
-                string privKey = _configuration["privkey"] ?? "";
-                string decryptedPassword = CommonServices.Decrypt(user.Password, privKey);
-                bool isPasswordValid = decryptedPassword == req.Password;
+                //// Decrypt stored password and compare
+                //string privKey = _configuration["privkey"] ?? "";
+                //string decryptedPassword = CommonServices.Decrypt(user.Password, privKey);
+                //bool isPasswordValid = decryptedPassword == req.Password;
 
-                if (!isPasswordValid)
+                //if (!isPasswordValid)
+                //{
+                //    return new
+                //    {
+                //        code = 400,
+                //        message = "Email hoặc mật khẩu không chính xác",
+                //        data = (object)null!
+                //    };
+                //}
+                if(user.Password != req.Password)
                 {
                     return new
                     {
@@ -153,7 +162,6 @@ namespace GammarBE.Services
                         data = (object)null!
                     };
                 }
-
                 if (user.Status != "Active")
                 {
                     return new
