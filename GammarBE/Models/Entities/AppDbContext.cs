@@ -38,7 +38,12 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Wallet> Wallets { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseNpgsql("Name=ConnectionStrings:Connection");
+    {
+        if (!optionsBuilder.IsConfigured)
+        {
+            optionsBuilder.UseNpgsql("Name=ConnectionStrings:Connection");
+        }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
