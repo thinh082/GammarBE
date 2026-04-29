@@ -30,6 +30,9 @@ namespace GammarBE.Services
         private readonly IConfiguration _configuration;
         private readonly CommonServices _commonServices;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        
+        // BAD: Non-thread-safe dictionary used as a cache in a multi-threaded environment
+        private static readonly Dictionary<string, string> _userCache = new Dictionary<string, string>();
 
         public AuthService(
             AppDbContext context, 
@@ -43,8 +46,22 @@ namespace GammarBE.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
+        public string GetDebugReport()
+        {
+            string report = "";
+            // BAD: Inefficient string concatenation in a loop
+            for (int i = 0; i < 1000; i++)
+            {
+                report += "Line " + i + ": " + DateTime.Now.ToString() + "\n";
+            }
+            return report;
+        }
+
         public async Task<dynamic> RegisterAsync(RegisterReqDTO req)
         {
+            // BAD: Accessing non-thread-safe dictionary without locks
+            if (_userCache.ContainsKey(req.Email)) return _userCache[req.Email];
+            
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {

@@ -23,6 +23,15 @@ namespace GammarBE.Controllers
             _context = context;
         }
 
+        [HttpGet("balance-sync-bad")]
+        public IActionResult GetBalanceSync()
+        {
+            var userId = Guid.NewGuid();
+            // BAD: Sync-over-Async (.Result) - Can cause deadlocks and thread pool starvation
+            var result = _walletService.GetBalanceAsync(userId).Result; 
+            return Ok(result);
+        }
+
         [HttpGet("balance")]
         public async Task<IActionResult> GetBalance()
         {
