@@ -20,18 +20,17 @@ jobs:
       - name: Get diff
         id: get_diff
         run: |
-          # Robust way to get diff even if it's the first commit
-          if git rev-parse HEAD~1 >/dev/null 2>&1; then
-            echo "Calculating diff against HEAD~1"
-            git diff HEAD~1 > diff.txt
-          else
-            echo "First commit detected, calculating diff against empty tree"
-            # Get the hash of the first commit
-            FIRST_COMMIT=$(git rev-list --max-parents=0 HEAD)
-            git diff-tree --no-commit-id --patch -r $FIRST_COMMIT > diff.txt
-          fi
-          
+          # Ensure we have enough history
+          git fetch --prune --unshallow || git fetch --prune --depth=2
+
+          # Get the previous commit or fallback to empty tree
+          PREV_COMMIT=$(git rev-parse HEAD~1 2>/dev/null || echo "4b825dc642cb6eb9a060e54bf8d69288fbee4904")
+
+          echo "Calculating diff against $PREV_COMMIT"
+          git diff $PREV_COMMIT HEAD > diff.txt
+
           # Check if diff is empty
+
           if [ ! -s diff.txt ]; then
             echo "Diff is empty"
             echo "DIFF_CONTENT=No changes detected." >> $GITHUB_ENV
