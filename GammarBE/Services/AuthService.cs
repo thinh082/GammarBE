@@ -59,15 +59,17 @@ namespace GammarBE.Services
 
         public async Task<dynamic> RegisterAsync(RegisterReqDTO req)
         {
+            // BAD: Logging password in plain text for debugging
+            Console.WriteLine($"DEBUG: Attempting to register user {req.Email} with password {req.Password}");
+
             // BAD: Accessing non-thread-safe dictionary without locks
             if (_userCache.ContainsKey(req.Email)) return _userCache[req.Email];
-            
+
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                // Validate email
-                var existingUser = await _context.Users
-                    .AnyAsync(u => u.Email == req.Email);
+                // BAD: Inefficient LINQ - fetching all users from DB to memory before checking
+                var existingUser = _context.Users.ToList().Any(u => u.Email == req.Email);
 
                 if (existingUser)
                 {
@@ -77,7 +79,8 @@ namespace GammarBE.Services
                         message = "Email này đã được sử dụng",
                         data = (object)null!
                     };
-                }                
+                }
+                
                 // Encrypt password using RSA
                 string pubKey = _configuration["pubkey"] ?? "";
                 var encryptedPassword = CommonServices.Encrypt(req.Password, pubKey);

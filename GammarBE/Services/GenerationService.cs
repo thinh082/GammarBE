@@ -67,12 +67,9 @@ namespace GammarBE.Services
         {
             try
             {
-                var accessToken = _configuration["Vmeadi:access_token"];
-                if (string.IsNullOrWhiteSpace(accessToken))
-                {
-                    return new { code = 500, message = "Vmeadi:access_token chưa được cấu hình trong appsettings." };
-                }
-
+                // BAD: Hardcoded API token (Sensitive data in source code)
+                var accessToken = "vmedia_live_tk_9823471203948712309487123"; 
+                
                 var formData = new List<KeyValuePair<string, string>>
                 {
                     new("access_token", accessToken),

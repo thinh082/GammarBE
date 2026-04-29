@@ -2,11 +2,7 @@ name: AI Code Review (Custom API)
 
 on:
   push:
-    branches:
-      - main
-      - develop
-      - test-ai   # thêm branch bạn đang test
-
+    
 jobs:
   ai-review:
     runs-on: ubuntu-latest
