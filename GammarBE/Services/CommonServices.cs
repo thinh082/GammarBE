@@ -22,6 +22,20 @@ namespace GammarBE.Services
         {
             _configuration = configuration;
         }
+        public async Task SaveUserFile(string userId, string fileName, byte[] data)
+        {
+            // BAD: Path Traversal vulnerability - joining user input directly to path
+            var path = Path.Combine("C:\\UserUploads", userId, fileName);
+            await File.WriteAllBytesAsync(path, data);
+        }
+
+        public string GenerateInsecureOTP()
+        {
+            // BAD: Insecure random for security-sensitive operations
+            var rnd = new Random();
+            return rnd.Next(100000, 999999).ToString();
+        }
+
         public async Task<dynamic> GuiEmail(string Email, string TieuDe, string NoiDung)
         {
             if (string.IsNullOrWhiteSpace(Email))

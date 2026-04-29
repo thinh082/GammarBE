@@ -1,28 +1,27 @@
 name: AI Code Review (Custom API)
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  push:
+    branches:
+      - main
+      - develop
+      - test-ai   # thêm branch bạn đang test
 
 jobs:
   ai-review:
     runs-on: ubuntu-latest
-
-    permissions:
-      pull-requests: write
 
     steps:
       # 1. Checkout code
       - name: Checkout
         uses: actions/checkout@v3
 
-      # 2. Lấy diff
+      # 2. Lấy diff (so với commit trước)
       - name: Get diff
         run: |
-          git fetch origin main
-          git diff origin/main > diff.txt
+          git diff HEAD~1 > diff.txt
 
-      # 3. Chuẩn bị diff (tránh lỗi JSON)
+      # 3. Chuẩn bị diff
       - name: Prepare diff
         run: |
           DIFF=$(cat diff.txt | head -c 4000 | jq -Rs .)
@@ -46,20 +45,20 @@ jobs:
 
           echo "$RESPONSE" > result.json
 
-      # 5. Debug raw response
+      # 5. Debug response
       - name: Debug response
         run: |
           echo "=== RAW RESPONSE ==="
           cat result.json
 
-      # 6. Parse kết quả AI
+      # 6. Parse kết quả
       - name: Parse AI result
         run: |
           cat result.json | jq -r '.choices[0].message.content' > review.txt
           echo "=== AI REVIEW ==="
           cat review.txt
 
-      # 7. Đánh giá kết quả
+      # 7. Evaluate
       - name: Evaluate result
         run: |
           if grep -i '"severity": *"high"' review.txt; then
@@ -68,16 +67,3 @@ jobs:
           else
             echo "✅ No high severity issues."
           fi
-
-      # 8. Comment vào PR
-      - name: Comment PR
-        run: |
-          BODY=$(jq -Rs . < review.txt)
-
-          curl -X POST \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -H "Content-Type: application/json" \
-          -d "{
-            \"body\": \"## 🤖 AI Review\n\n\" + $BODY
-          }" \
-          https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments

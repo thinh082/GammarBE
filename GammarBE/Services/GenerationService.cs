@@ -10,6 +10,7 @@ namespace GammarBE.Services
     public interface IGenerationService
     {
         Task<dynamic> GenerateImg(GenerateImgDTO dto);
+        Task<List<dynamic>> GetGenerationHistory();
     }
 
     public class GenerationService : IGenerationService
@@ -34,6 +35,32 @@ namespace GammarBE.Services
             _configuration = configuration;
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
+        }
+
+        public async Task<List<dynamic>> GetGenerationHistory()
+        {
+            // BAD: Resource leak - MemoryStream is not disposed
+            var ms = new MemoryStream();
+            var writer = new StreamWriter(ms);
+            writer.WriteLine("Exporting history at " + DateTime.Now);
+            writer.Flush();
+
+            var history = await _context.Generations.Take(10).ToListAsync();
+            var result = new List<dynamic>();
+
+            foreach (var item in history)
+            {
+                // BAD: N+1 Query Problem - querying User inside a loop
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == item.UserId);
+                result.Add(new
+                {
+                    item.Id,
+                    item.Prompt,
+                    UserName = user?.Fullname ?? "Unknown"
+                });
+            }
+
+            return result;
         }
 
         public async Task<dynamic> GenerateImg(GenerateImgDTO dto)
