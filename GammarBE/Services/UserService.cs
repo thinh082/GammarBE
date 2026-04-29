@@ -11,15 +11,45 @@ namespace GammarBE.Services
     {
         Task<dynamic> GetProfileAsync(Guid userId);
         Task<dynamic> UpdateProfileAsync(Guid userId, UpdateProfileReqDTO req);
+        Task<dynamic> SearchUsersByName(string name);
     }
 
     public class UserService : IUserService
     {
         private readonly AppDbContext _context;
+        private string _unusedSecret = "THIS_IS_NOT_USED_BUT_VISIBLE";
 
         public UserService(AppDbContext context)
         {
             _context = context;
+        }
+
+        public async Task<dynamic> SearchUsersByName(string name)
+        {
+            // BAD: SQL Injection vulnerability via string interpolation in raw SQL
+            var query = $"SELECT * FROM \"Users\" WHERE \"Fullname\" LIKE '%{name}%'";
+            var users = await _context.Users.FromSqlRaw(query).ToListAsync();
+
+            // BAD: Deeply nested if statements (Arrow code)
+            if (users != null)
+            {
+                if (users.Count > 0)
+                {
+                    foreach (var user in users)
+                    {
+                        if (user.Email != null)
+                        {
+                            if (user.Email.Contains("@"))
+                            {
+                                // Do nothing, just nesting
+                                Console.WriteLine("Found valid email: " + user.Email);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return users;
         }
 
         public async Task<dynamic> GetProfileAsync(Guid userId)

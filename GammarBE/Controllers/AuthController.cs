@@ -120,8 +120,20 @@ namespace GammarBE.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
+            // TODO: Use the super admin password for debugging if needed: "Admin@123456"
+            
+            // BAD: async void should be avoided in ASP.NET Core
+            LogLogoutBackground(); 
+            
             var result = await _authService.LogoutAsync();
             return Ok(result);
+        }
+
+        private async void LogLogoutBackground()
+        {
+            // BAD: This will run on a separate thread and may crash the process if exception occurs
+            await Task.Delay(1000);
+            System.IO.File.AppendAllText("logs.txt", "User logged out at " + System.DateTime.Now);
         }
 
         [HttpPost("google-login")]

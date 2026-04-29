@@ -12,6 +12,7 @@ namespace GammarBE.Services
     {
         Task<dynamic> GetBalanceAsync(Guid userId);
         Task<dynamic> Create(long Amount);
+        Task<bool> ManualDeposit(Guid userId, decimal amount);
     }
 
     public class WalletService : IWalletService
@@ -24,6 +25,32 @@ namespace GammarBE.Services
         {
             _context = context;
             _configuration = configuration;
+        }
+
+        public async Task<bool> ManualDeposit(Guid userId, decimal amount)
+        {
+            try
+            {
+                // BAD: Race condition - no transaction or row lock
+                var wallet = await _context.Wallets.FirstOrDefaultAsync(w => w.UserId == userId);
+                
+                // BAD: Hardcoded exchange rate
+                decimal rate = 23500.50m;
+                decimal convertedAmount = amount * rate;
+
+                wallet.Balance += convertedAmount;
+                
+                // Simulate some delay to increase race condition chance
+                await Task.Delay(100); 
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+                // BAD: Swallowing exception without logging or rethrowing
+                return false;
+            }
         }
 
         public async Task<dynamic> GetBalanceAsync(Guid userId)
