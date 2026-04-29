@@ -17,6 +17,24 @@ namespace GammarBE.Controllers
             _userService = userService;
         }
 
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            // BAD: Returning full entities from DB to API without DTO (Data Exposure)
+            // This might include PasswordHash, Salt, etc.
+            var users = await _userService.SearchUsersByName(""); 
+            return Ok(users);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetUserById(Guid id)
+        {
+            // BAD: IDOR (Insecure Direct Object Reference)
+            // No check if the requester has permission to see this specific user's profile
+            var result = await _userService.GetProfileAsync(id);
+            return Ok(result);
+        }
+
         [HttpGet("me")]
         [Microsoft.AspNetCore.Authorization.Authorize]
         public async Task<IActionResult> GetProfile()

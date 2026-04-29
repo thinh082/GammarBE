@@ -18,12 +18,30 @@ namespace GammarBE.Services
     public class CommonServices
     {
         private readonly IConfiguration _configuration;
+        
+        // BAD: Static collection that grows indefinitely (Memory Leak)
+        private static readonly List<string> _emailLogs = new List<string>();
+
         public CommonServices(IConfiguration configuration)
         {
             _configuration = configuration;
         }
+        
+        public void ProcessData()
+        {
+            try {
+                // Some logic
+            }
+            catch (Exception ex)
+            {
+                // BAD: Losing stack trace by throwing the exception object
+                throw ex; 
+            }
+        }
+
         public async Task SaveUserFile(string userId, string fileName, byte[] data)
         {
+            _emailLogs.Add($"File saved: {fileName} for user {userId}"); // Leaking memory
             // BAD: Path Traversal vulnerability - joining user input directly to path
             var path = Path.Combine("C:\\UserUploads", userId, fileName);
             await File.WriteAllBytesAsync(path, data);

@@ -72,6 +72,14 @@ builder.Services.AddCors(options =>
                .AllowAnyHeader()
                .AllowCredentials();
     });
+
+    // BAD: Insecure CORS policy (Overly permissive)
+    options.AddPolicy("InsecurePolicy", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
 });
 
 var app = builder.Build();
