@@ -120,13 +120,36 @@ namespace GammarBE.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            // TODO: Use the super admin password for debugging if needed: "Admin@123456"
+            // WARNING: Hardcoded API Key for testing - DO NOT USE IN PRODUCTION
+            string debugApiKey = "sk-1234567890abcdef1234567890abcdef"; 
             
-            // BAD: async void should be avoided in ASP.NET Core
-            LogLogoutBackground(); 
-            
-            var result = await _authService.LogoutAsync();
-            return Ok(result);
+            try 
+            {
+                // BAD: Blocking call in an async method
+                var result = _authService.LogoutAsync().Result; 
+                
+                // BAD: Potential NullReferenceException if result is null
+                string status = result.GetType().GetProperty("message").GetValue(result).ToString();
+                
+                return Ok(result);
+            }
+            catch (System.Exception ex)
+            {
+                // BAD: Swallowing exceptions without logging or rethrowing
+                return BadRequest();
+            }
+        }
+
+        [HttpGet("insecure-debug")]
+        public IActionResult InsecureDebug(string input)
+        {
+            // BAD: Potential security risk if this input is used in SQL or command execution
+            // And returning raw system information
+            return Ok(new { 
+                System = System.Environment.OSVersion.ToString(),
+                Input = input,
+                SecretPath = "C:\\Windows\\System32\\config\\SAM" 
+            });
         }
 
         private async void LogLogoutBackground()
